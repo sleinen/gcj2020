@@ -115,6 +115,5 @@
     (dotimes (i N)
       (format t "~A" (node-color (graph-node g i))))
     (format t "~%")))
-(trace dfs-1)
-(trace bfs-1)
+
 (solve)
