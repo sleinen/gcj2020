@@ -13,10 +13,10 @@
 (defun parenthesize (S)
   (let ((nest 0))
     (do ((k 0 (1+ k)))
-	((>= k (length S)))
+        ((>= k (length S)))
       (let ((dig (parse-integer (subseq S k (1+ k)))))
-	(setq nest (fix-parens nest dig))
-	(format t "~D" dig)))
+        (setq nest (fix-parens nest dig))
+        (format t "~D" dig)))
     (fix-parens nest 0)))
 
 (defun solve-case (caseno in)
