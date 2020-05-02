@@ -1,49 +1,33 @@
 ;;; Google Code Jam 2020, Round 1C, Problem 2: Overrandomized
-;;
 
 (defun solve (&optional (in *standard-input*))
   (dotimes (caseno (read in))
-    (format t "Case #~D: ~A~%" (+ caseno 1) (solve-case in))))
+    (format t "Case #~D: " (+ caseno 1))
+    (solve-case in)))
 
 (defun solve-case (in)
-  (let ((u (read in))
-        (entries (make-array (list 10000)))
-        (charset '()))
-    (dotimes (i 10000)
-      (let ((qi (read in))
-            (ri (string-trim '(#\Space #\Tab #\Newline) (read-line in))))
-        (declare (ignore qi))
-        (dotimes (k (length ri))
-          (unless (member (char ri k) charset)
-            (push (char ri k) charset)))
-        (setf (aref entries i) (char ri 0))))
-    (solve-case-1 u entries charset)))
-
-(defun solve-case-1 (u entries charset)
-  (declare (ignore u))
-  (when (/= (length charset) 10)
-    (return-from solve-case-1 "CHARSETERR"))
-  (unless (every #'(lambda (c) (and (alpha-char-p c) (upper-case-p c))) charset)
-    (return-from solve-case-1 "NOTALLCAPS"))
-
-  ;; Now count leading digits
-  (let ((counts (make-array (list 10) :initial-element 0)))
-    (dotimes (i 10000)
-      (let ((ri (aref entries i)))
-        (incf (aref counts (position ri charset)))))
-
-    (let ((count-to-digit (pairlis (coerce counts 'list) charset)))
-      (let ((sorted-counts (sort counts #'>)))
-        (let ((result (make-string 10)))
-          (setf (char result 0)
-                (first (set-difference
-                        charset
-                        (reduce #'union
-                                (map 'list #'(lambda (entry) (list entry))
-                                     entries)))))
+  (labels
+      ((i2c (i) (code-char (+ i #.(char-code #\A))))
+       (c2i (c) (- (char-code c) #.(char-code #\A))))
+    (let ((u (read in))
+          (seen 0)
+          (d1-counters (make-array (list 26) :initial-element 0)))
+      (declare (ignore u))
+      (dotimes (i 10000)
+        (let ((qi (read in))
+              (ri (string-trim '(#\Space #\Tab #\Newline) (read-line in))))
+          (declare (ignore qi))
+          (incf (aref d1-counters (c2i (char ri 0))))
+          (dotimes (k (length ri))
+            (setf seen (logior seen (ash 1 (c2i (char ri k))))))))
+      (let ((zero (dotimes (i 26 0)
+                    (when (and (not (zerop (logand seen (ash 1 i))))
+                               (zerop (aref d1-counters i)))
+                      (return i)))))
+        (write-char (i2c zero))
+        (let ((sorted-counters (sort (copy-seq d1-counters) #'>)))
           (dotimes (i 9)
-            (setf (char result (1+ i))
-                  (cdr (assoc (aref sorted-counts i) count-to-digit))))
-          result)))))
+            (write-char (i2c (position (aref sorted-counters i) d1-counters)))))))
+    (terpri)))
 
 (solve)
