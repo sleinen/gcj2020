@@ -1,0 +1,68 @@
+;;; Google Code Jam 2020, Round 1C, Problem 2: Overrandomized
+;;
+
+(defun solve (&optional (in *standard-input*))
+  (dotimes (caseno (the (integer 0 1000) (read in)))
+    (format t "Case #~D: " (+ caseno 1))
+    (solve-case in)))
+
+(defun solve-case (in)
+  (let ((u (read in)))
+    (let ((pairs (make-array (list 10000))))
+      (let ((charset '()))
+        (dotimes (i 10000)
+          (let ((qi (read in)) (ri (read-line in)))
+            (dotimes (k (length ri))
+              (setq charset (union charset (list (aref ri k)))))
+            (setf (aref pairs i) (cons qi ri))))
+        (solve-case-1 u pairs charset)))))
+
+(defun solve-case-1 (u pairs charset)
+  (let ((digits (make-array (list 10) :initial-element #\?)))
+    (let ((counts (make-array (list 10) :initial-element 0)))
+      (dotimes (i 10000)
+        (let ((pair (aref pairs i)))
+          (let ((ri (cdr pair)))
+            (dotimes (k (length ri))
+              (incf (aref counts (position (aref ri k) charset))
+                    (expt 10 (- (length ri) k)))))))
+      ;(warn "counts: ~S" counts)
+      (let ((zero-candidates charset))
+        (dotimes (i 10000)
+          (let ((pair (aref pairs i)))
+            (setq zero-candidates (set-difference zero-candidates (list (aref (cdr pair) 0))))))
+        ;;(assert (not (endp zero-candidates)))
+        ;;(assert (endp (rest zero-candidates)))
+        (setf (aref digits 0) (first zero-candidates))))
+
+    ;; Pad all Qi with leading zeroes
+    (dotimes (i 10000)
+      (let ((pair (aref pairs i)))
+        (when (< (length (cdr pair)) u)
+          (setf (cdr pair)
+                (concatenate 'string
+                             (make-string (- u (length (cdr pair)))
+                                          :initial-element (aref digits 0))
+                             (cdr pair))))))
+
+    ;; Now count weighted digits
+    (let ((counts (make-array (list 10) :initial-element 0)))
+      (dotimes (i 10000)
+        (let ((pair (aref pairs i)))
+          (let ((ri (cdr pair)))
+            (dotimes (k u)
+              (incf (aref counts (position (aref ri k) charset))
+                    (expt 10 (- u k)))))))
+
+      ;(warn "counts: ~S" counts)
+      (let ((count-to-digit (make-hash-table)))
+        (let ((chars charset))
+          (dotimes (i 10)
+            (setf (gethash (aref counts i) count-to-digit)
+                  (pop chars))))
+        (let ((sorted-counts (sort counts #'>)))
+          (dotimes (i 10)
+            (format t "~A" (gethash (aref sorted-counts i) count-to-digit #\?)))
+          (format t "~%"))))))
+
+(solve)
