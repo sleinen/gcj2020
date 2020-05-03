@@ -34,22 +34,18 @@
 ;;; self-written program (2-test.lisp in this directory), and it
 ;;; always terminates without errors and with the expected results.
 ;;;
-(defun solve (&optional (in *standard-input*))
-  (dotimes (caseno (read in))
+(labels
+    ((i2c (i) (code-char (+ i #.(char-code #\A))))
+     (c2i (c) (- (char-code c) #.(char-code #\A))))
+  (dotimes (caseno (read))
     (format t "Case #~D: " (+ caseno 1))
-    (solve-case in)))
-
-(defun solve-case (in)
-  (labels
-      ((i2c (i) (code-char (+ i #.(char-code #\A))))
-       (c2i (c) (- (char-code c) #.(char-code #\A))))
-    (let ((u (read in))
+    (let ((u (read))
           (seen 0)
           (d1-counters (make-array (list 26) :initial-element 0)))
       (declare (ignore u))
       (dotimes (i 10000)
-        (let ((qi (read in))
-              (ri (string-trim '(#\Space #\Tab #\Newline) (read-line in))))
+        (let ((qi (read))
+              (ri (read-line)))
           (declare (ignore qi))
           (incf (aref d1-counters (c2i (char ri 0))))
           (dotimes (k (length ri))
@@ -62,5 +58,3 @@
           (dotimes (i 9)
             (write-char (i2c (position (aref sorted-counters i) d1-counters)))))))
     (terpri)))
-
-(solve)
