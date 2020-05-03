@@ -3,44 +3,20 @@
 
 (defun solve (&optional (in *standard-input*))
   (dotimes (caseno (the (integer 0 1000) (read in)))
-    (format t "Case #~D: " (+ caseno 1))
-    (solve-case in)))
-
-(defun dir-xy-offset (c)
-  (ecase c
-    ((#\N) (values  0  1))
-    ((#\S) (values  0 -1))
-    ((#\W) (values -1  0))
-    ((#\E) (values  1  0))
-    ((#\*) (values  0  0))))            ;Stay where we are
+    (format t "Case #~D: ~A~%" (+ caseno 1) (solve-case in))))
 
 (defun solve-case (in)
-  (format t "~A~%"
-          (solve-case-1
-           (read in)
-           (read in)
-           (map 'list #'identity (read-line in))
-           0
-           nil)))
+  (solve-case-1 (read in) (read in) (coerce (read-line in) 'list) 0))
 
-(defun solve-case-1 (x y seq steps best-so-far)
-  (cond ((= x y 0)
-         (if best-so-far (min best-so-far steps) steps))
-        ((and best-so-far (> steps best-so-far)) ;We can't get any better
-         best-so-far)
-        ((<= (+ (abs x) (abs y)) steps) ;We can get there in time
-         (let ((new-solution steps))
-           (let ((new-best (if best-so-far (min best-so-far new-solution) new-solution)))
-             (if (endp seq)
-                 new-best
-                 (multiple-value-bind (dx dy)
-                     (dir-xy-offset (first seq))
-                   (solve-case-1 (+ x dx) (+ y dy) (rest seq) (1+ steps) new-best))))))
-        ((endp seq)
-         (or best-so-far 'IMPOSSIBLE))
-        (t
-         (multiple-value-bind (dx dy)
-             (dir-xy-offset (first seq))
-           (solve-case-1 (+ x dx) (+ y dy) (rest seq) (1+ steps) best-so-far)))))
+(defun solve-case-1 (x y seq steps)
+  (labels
+      ((dir-xy-offset (c)
+         (values (ecase c ((#\N) 0) ((#\S)  0) ((#\W) -1) ((#\E) 1))
+                 (ecase c ((#\N) 1) ((#\S) -1) ((#\W)  0) ((#\E) 0)))))
+    (cond ((<= (+ (abs x) (abs y)) steps) steps)
+          ((endp seq) 'IMPOSSIBLE)
+          (t (multiple-value-bind (dx dy)
+                 (dir-xy-offset (first seq))
+               (solve-case-1 (+ x dx) (+ y dy) (rest seq) (1+ steps)))))))
 
 (solve)
